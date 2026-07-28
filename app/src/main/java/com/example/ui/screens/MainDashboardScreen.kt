@@ -113,6 +113,7 @@ fun MainDashboardScreen(
     var showBiometricModal by remember { mutableStateOf(false) }
     var pendingAction by remember { mutableStateOf<String?>(null) } // "CHECK_IN" or "CHECK_OUT"
     var showCodeGsDialog by remember { mutableStateOf(false) }
+    var showAdminAuthDialog by remember { mutableStateOf(false) }
     var showManualEntryDialog by remember { mutableStateOf(false) }
     var showEmployeeDialog by remember { mutableStateOf(false) }
     var editingRecord by remember { mutableStateOf<AttendanceRecord?>(null) }
@@ -260,6 +261,23 @@ fun MainDashboardScreen(
                         Spacer(modifier = Modifier.width(8.dp))
 
                         if (currentEmployee.role == "Admin" || currentEmployee.role == "Manager") {
+                            IconButton(
+                                onClick = { showAdminAuthDialog = true },
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .background(SlateCardBg)
+                                    .testTag("admin_auth_header_button")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Shield,
+                                    contentDescription = "Admin Security",
+                                    tint = CyanAccent,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(6.dp))
+
                             IconButton(
                                 onClick = { showCodeGsDialog = true },
                                 modifier = Modifier
@@ -773,6 +791,16 @@ fun MainDashboardScreen(
             currentWebAppUrl = webAppUrl,
             onSaveWebAppUrl = { viewModel.saveWebAppUrl(it) },
             onDismiss = { showCodeGsDialog = false }
+        )
+    }
+
+    if (showAdminAuthDialog) {
+        com.example.ui.components.AdminAuthDialog(
+            onAdminAuthenticated = { email ->
+                Toast.makeText(context, "Admin Access Granted: $email", Toast.LENGTH_LONG).show()
+                showAdminAuthDialog = false
+            },
+            onDismiss = { showAdminAuthDialog = false }
         )
     }
 

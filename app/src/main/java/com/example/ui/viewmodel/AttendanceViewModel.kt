@@ -77,7 +77,9 @@ class AttendanceViewModel(application: Application) : AndroidViewModel(applicati
 
     private val sharedPrefs = application.getSharedPreferences("workpay_prefs", Context.MODE_PRIVATE)
 
-    private val _webAppUrl = MutableStateFlow(sharedPrefs.getString("web_app_url", "") ?: "")
+    private val _webAppUrl = MutableStateFlow(
+        sharedPrefs.getString("web_app_url", null)?.ifBlank { null } ?: com.example.data.remote.CodeScriptProvider.DEFAULT_WEB_APP_URL
+    )
     val webAppUrl: StateFlow<String> = _webAppUrl.asStateFlow()
 
     private val _isSyncing = MutableStateFlow(false)

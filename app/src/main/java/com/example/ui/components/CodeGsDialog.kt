@@ -65,7 +65,7 @@ fun CodeGsDialog(
 ) {
     val context = LocalContext.current
     var inputUrl by remember { mutableStateOf(currentWebAppUrl) }
-    var selectedTab by remember { mutableStateOf(0) } // 0 = Code.gs, 1 = Setup Guide
+    var selectedTab by remember { mutableStateOf(0) } // 0 = Code.gs, 1 = index.html, 2 = Deploy Instructions
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -96,7 +96,7 @@ fun CodeGsDialog(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Google Sheet Backend (Code.gs)",
+                            text = "Admin Auth & Sheet Backend Code",
                             style = MaterialTheme.typography.titleLarge,
                             color = TextPrimary,
                             fontWeight = FontWeight.Bold,
@@ -137,7 +137,8 @@ fun CodeGsDialog(
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row {
                         TextButton(
@@ -146,7 +147,7 @@ fun CodeGsDialog(
                                 contentColor = if (selectedTab == 0) EmeraldGreen else TextMuted
                             )
                         ) {
-                            Text("1. Code.gs Source", fontWeight = FontWeight.Bold)
+                            Text("1. Code.gs", fontWeight = FontWeight.Bold, fontSize = 12.sp)
                         }
                         TextButton(
                             onClick = { selectedTab = 1 },
@@ -154,16 +155,34 @@ fun CodeGsDialog(
                                 contentColor = if (selectedTab == 1) EmeraldGreen else TextMuted
                             )
                         ) {
-                            Text("2. Deploy Instructions", fontWeight = FontWeight.Bold)
+                            Text("2. index.html", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        }
+                        TextButton(
+                            onClick = { selectedTab = 2 },
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = if (selectedTab == 2) EmeraldGreen else TextMuted
+                            )
+                        ) {
+                            Text("3. Guide", fontWeight = FontWeight.Bold, fontSize = 12.sp)
                         }
                     }
 
                     Button(
                         onClick = {
                             val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                            val clip = ClipData.newPlainText("Code.gs", CodeScriptProvider.CODE_GS_SCRIPT)
+                            val copyText = when (selectedTab) {
+                                0 -> CodeScriptProvider.CODE_GS_SCRIPT
+                                1 -> CodeScriptProvider.INDEX_HTML
+                                else -> CodeScriptProvider.DEPLOYMENT_INSTRUCTIONS
+                            }
+                            val label = when (selectedTab) {
+                                0 -> "Code.gs"
+                                1 -> "index.html"
+                                else -> "Setup Guide"
+                            }
+                            val clip = ClipData.newPlainText(label, copyText)
                             clipboard.setPrimaryClip(clip)
-                            Toast.makeText(context, "Code.gs copied to clipboard!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "$label copied to clipboard!", Toast.LENGTH_SHORT).show()
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = EmeraldGreen),
                         shape = RoundedCornerShape(10.dp),
@@ -172,11 +191,11 @@ fun CodeGsDialog(
                         Icon(
                             imageVector = Icons.Default.ContentCopy,
                             contentDescription = "Copy",
-                            modifier = Modifier.size(16.dp),
+                            modifier = Modifier.size(14.dp),
                             tint = SlateDarkBg
                         )
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Copy Script", color = SlateDarkBg, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text("Copy", color = SlateDarkBg, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     }
                 }
 
@@ -192,11 +211,16 @@ fun CodeGsDialog(
                 ) {
                     val scrollState = rememberScrollState()
                     Column(modifier = Modifier.verticalScroll(scrollState)) {
+                        val displayText = when (selectedTab) {
+                            0 -> CodeScriptProvider.CODE_GS_SCRIPT
+                            1 -> CodeScriptProvider.INDEX_HTML
+                            else -> CodeScriptProvider.DEPLOYMENT_INSTRUCTIONS
+                        }
                         Text(
-                            text = if (selectedTab == 0) CodeScriptProvider.CODE_GS_SCRIPT else CodeScriptProvider.DEPLOYMENT_INSTRUCTIONS,
+                            text = displayText,
                             fontFamily = FontFamily.Monospace,
                             fontSize = 11.sp,
-                            color = if (selectedTab == 0) CyanAccent else TextPrimary,
+                            color = if (selectedTab == 2) TextPrimary else CyanAccent,
                             lineHeight = 16.sp
                         )
                     }
