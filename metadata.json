@@ -1,0 +1,6 @@
+{
+  "name": "Attendance & Salary Tracker",
+  "description": "Attendance and salary tracking app with biometric check-in, shift pay calculator, live dashboard analytics, and Google Sheets synchronization.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
