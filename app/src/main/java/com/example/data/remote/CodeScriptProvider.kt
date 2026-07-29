@@ -26,26 +26,65 @@ function getOrCreateSpreadsheet() {
     ss = SpreadsheetApp.open(files.next());
   } else {
     ss = SpreadsheetApp.create(SHEET_NAME_DB);
-    var sheet = ss.getActiveSheet();
-    sheet.setName("Attendance_Logs");
     
+    // TAB 1: Dashboard
+    var dashSheet = ss.getActiveSheet();
+    dashSheet.setName("Dashboard");
+    dashSheet.getRange("A1:F1").merge().setValue("WORKPAY ATTENDANCE & PAYROLL DASHBOARD")
+      .setBackground("#064E3B").setFontColor("#FFFFFF").setFontWeight("bold").setFontSize(16).setHorizAlignment("center");
+    
+    dashSheet.getRange("A2:F2").merge().setValue("Dubai Labor Law Compliant • Basic Salary Base: 1,000 AED")
+      .setBackground("#022C22").setFontColor("#34D399").setFontSize(10).setHorizAlignment("center");
+    
+    // KPI Cards Block
+    var kpiHeaders = [["Total Records", "Total Basic", "Total Allowances", "Total Overtime", "Total Deductions", "Net Total Payroll"]];
+    dashSheet.getRange("A4:F4").setValues(kpiHeaders).setBackground("#0F172A").setFontColor("#94A3B8").setFontWeight("bold").setFontSize(10).setHorizAlignment("center");
+    
+    var kpiFormulas = [["=COUNTA(Attendance_Logs!A2:A)", "=SUM(Attendance_Logs!I2:I)", "=SUM(Attendance_Logs!J2:J)", "=SUM(Attendance_Logs!K2:K)", "=SUM(Attendance_Logs!L2:L)", "=SUM(Attendance_Logs!M2:M)"]];
+    dashSheet.getRange("A5:F5").setFormulas(kpiFormulas).setBackground("#1E293B").setFontColor("#38BDF8").setFontWeight("bold").setFontSize(14).setHorizAlignment("center");
+    dashSheet.getRange("B5:F5").setNumberFormat("AED #,##0.00");
+    
+    // TAB 2: Attendance Logs
+    var logsSheet = ss.insertSheet("Attendance_Logs");
     var headers = [
       "Timestamp", "Date", "Employee_ID", "Employee_Name",
       "CheckIn_Time", "CheckOut_Time", "Hours_Worked", "Shift_Category", 
       "Basic_Earned", "Allowance_Earned", "OT_Earned", "Deductions", 
       "Net_Daily_Pay", "Status"
     ];
+    logsSheet.appendRow(headers);
+    var headerRange = logsSheet.getRange(1, 1, 1, headers.length);
+    headerRange.setBackground("#064E3B").setFontColor("#FFFFFF").setFontWeight("bold").setFontSize(11).setHorizAlignment("center");
+    logsSheet.setFrozenRows(1);
+    logsSheet.setColumnWidths(1, headers.length, 130);
+
+    // TAB 3: Employee Summary
+    var summarySheet = ss.insertSheet("Employee_Payroll_Summary");
+    summarySheet.appendRow(["Employee ID", "Employee Name", "Shifts Logged", "Total Basic (AED)", "Total Allowance (AED)", "Total OT (AED)", "Total Deductions (AED)", "Net Salary (AED)"]);
+    summarySheet.getRange("A1:H1").setBackground("#064E3B").setFontColor("#FFFFFF").setFontWeight("bold").setFontSize(11).setHorizAlignment("center");
     
-    sheet.appendRow(headers);
-    var headerRange = sheet.getRange(1, 1, 1, headers.length);
-    headerRange.setBackground("#064E3B");
-    headerRange.setFontColor("#FFFFFF");
-    headerRange.setFontWeight("bold");
-    headerRange.setFontSize(11);
-    headerRange.setHorizAlignment("center");
-    
-    sheet.setFrozenRows(1);
-    sheet.setColumnWidths(1, headers.length, 130);
+    var defaultEmps = [
+      ["EMP-101", "Alex Mercer", "=COUNTIF(Attendance_Logs!C:C, A2)", "=SUMIF(Attendance_Logs!C:C, A2, Attendance_Logs!I:I)", "=SUMIF(Attendance_Logs!C:C, A2, Attendance_Logs!J:J)", "=SUMIF(Attendance_Logs!C:C, A2, Attendance_Logs!K:K)", "=SUMIF(Attendance_Logs!C:C, A2, Attendance_Logs!L:L)", "=SUMIF(Attendance_Logs!C:C, A2, Attendance_Logs!M:M)"],
+      ["EMP-102", "Sarah Connor", "=COUNTIF(Attendance_Logs!C:C, A3)", "=SUMIF(Attendance_Logs!C:C, A3, Attendance_Logs!I:I)", "=SUMIF(Attendance_Logs!C:C, A3, Attendance_Logs!J:J)", "=SUMIF(Attendance_Logs!C:C, A3, Attendance_Logs!K:K)", "=SUMIF(Attendance_Logs!C:C, A3, Attendance_Logs!L:L)", "=SUMIF(Attendance_Logs!C:C, A3, Attendance_Logs!M:M)"],
+      ["EMP-103", "Elena Rostova", "=COUNTIF(Attendance_Logs!C:C, A4)", "=SUMIF(Attendance_Logs!C:C, A4, Attendance_Logs!I:I)", "=SUMIF(Attendance_Logs!C:C, A4, Attendance_Logs!J:J)", "=SUMIF(Attendance_Logs!C:C, A4, Attendance_Logs!K:K)", "=SUMIF(Attendance_Logs!C:C, A4, Attendance_Logs!L:L)", "=SUMIF(Attendance_Logs!C:C, A4, Attendance_Logs!M:M)"]
+    ];
+    for (var i = 0; i < defaultEmps.length; i++) {
+      summarySheet.appendRow(defaultEmps[i]);
+    }
+    summarySheet.getRange(2, 4, defaultEmps.length, 5).setNumberFormat("AED #,##0.00");
+    summarySheet.setFrozenRows(1);
+    summarySheet.setColumnWidths(1, 8, 140);
+
+    // TAB 4: Labor Law Rules Reference
+    var rulesSheet = ss.insertSheet("Dubai_Labor_Law_Rules");
+    rulesSheet.appendRow(["Rule Parameter", "Value / Formula Basis", "Legal Standard"]);
+    rulesSheet.getRange("A1:C1").setBackground("#064E3B").setFontColor("#FFFFFF").setFontWeight("bold");
+    rulesSheet.appendRow(["Basic Monthly Salary", "1,000.00 AED", "Dubai Minimum Base Benchmark"]);
+    rulesSheet.appendRow(["Daily Basic Rate", "33.33 AED/day", "Basic Salary / 30 Days"]);
+    rulesSheet.appendRow(["Basic Hourly Rate", "2.78 AED/hr", "Daily Basic / 12 Shift Hours"]);
+    rulesSheet.appendRow(["Deduction Principle", "Proportional Basic Only", "Late/short hours deducted strictly from Basic Salary"]);
+    rulesSheet.appendRow(["Overtime Rate", "1.5x Hourly Rate", "8.33 AED/hr on extra hours"]);
+    rulesSheet.setColumnWidths(1, 3, 200);
   }
   return ss;
 }
